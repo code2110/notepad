@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Offline Notepad</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: #1e1e1e;
+            color: #f5f5f5;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden; /* prevent horizontal scroll */
+        }
+        textarea {
+            flex: 1;
+            width: 100%;
+            padding: 20px;
+            border: none;
+            resize: none;
+            background: #1e1e1e;
+            color: #f5f5f5;
+            font-size: 16px;
+            line-height: 1.6;
+            outline: none;
+            box-sizing: border-box; /* important */
+            overflow: hidden; /* prevent horizontal scroll */
+        }
+        /*#wordCount {
+            padding: 10px;
+            text-align: right;
+            font-size: 14px;
+            background: #2e2e2e;
+            color: #ccc;
+        }*/
+    </style>
+</head>
+<body>
+    <textarea id="editor" placeholder="Start typing..."></textarea>
+    <!-- <div id="wordCount">Words: 0</div> -->
+
+    <script>
+        const editor = document.getElementById('editor');
+        const wordCountDisplay = document.getElementById('wordCount');
+        const STORAGE_KEY = 'myOfflineNotepadContentnight2';
+
+        // Load saved content
+        editor.value = localStorage.getItem(STORAGE_KEY) || '';
+
+        // Save on every change
+        editor.addEventListener('input', () => {
+            localStorage.setItem(STORAGE_KEY, editor.value);
+            updateWordCount();
+        });
+
+        function updateWordCount() {
+            const text = editor.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            wordCountDisplay.textContent = `Words: ${words}`;
+        }
+
+        // Initial word count update
+        updateWordCount();
+
+
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyawZD7oKBlDQ3xAdi1gXjrAsch2hl--zSunxhm9no1s7eyCcvEWWtwnfsp680OLeM_Uw/exec";
+
+        // Add a Save button
+        const saveButton = document.createElement('button');
+        saveButton.textContent = 'Save to Cloud';
+        saveButton.style.padding = '10px';
+        saveButton.style.margin = '10px';
+        saveButton.style.fontSize = '16px';
+        saveButton.onclick = () => {
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'text=' + encodeURIComponent(editor.value)
+            }).then(() => alert('Saved to Google Sheet!'));
+        };
+        document.body.appendChild(saveButton);
+
+        // Optional: Load data from cloud when page opens
+        fetch(GOOGLE_SCRIPT_URL)
+            .then(response => response.text())
+            .then(data => {
+                editor.value = data;
+                localStorage.setItem(STORAGE_KEY, data);
+                updateWordCount();
+            });
+
+
+    </script>
+</body>
+</html>
+
+
